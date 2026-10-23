@@ -1,9 +1,9 @@
 import re
 from flask import Flask, jsonify, render_template, request
-from flask_cors import CORS  # यह लाइन जोड़ी गई है
+from flask_cors import CORS 
 
 app = Flask(__name__)
-CORS(app)  # यह लाइन जोड़ी गई है
+CORS(app) 
 
 
 def analyze_scam_message(text):
