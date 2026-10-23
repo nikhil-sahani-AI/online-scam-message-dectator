@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberShield - Scam Message Detector</title>
+    <!-- Bootstrap CSS for Modern Dark UI -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', sans-serif; }
+        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; }
+        .btn-custom { background-color: #0284c7; color: white; border: none; font-weight: 600; }
+        .btn-custom:hover { background-color: #0369a1; color: white; }
+        .risk-meter { height: 20px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <h1 class="fw-bold mb-2 text-info">🛡️ CyberShield AI</h1>
+                <p class="text-secondary">CS-02: Real-Time Online Scam & Phishing Detector</p>
+                
+                <div class="card p-4 shadow-lg text-start mt-4">
+                    <label for="scamInput" class="form-label fw-bold">Paste suspicious message or SMS here:</label>
+                    <textarea id="scamInput" class="form-control bg-dark text-light border-secondary" rows="5" placeholder="e.g., Urgent! Your account is blocked. Click bit.ly/unblock-kyc to update immediately."></textarea>
+                    
+                    <button class="btn btn-custom btn-lg w-100 mt-3" onclick="checkMessage()">🔍 Analyze Message</button>
+
+                    <!-- Result Section -->
+                    <div id="resultBox" class="mt-4 d-none">
+                        <hr class="border-secondary">
+                        <h4 id="statusLabel" class="fw-bold"></h4>
+                        
+                        <div class="my-3">
+                            <label class="form-label fw-bold">Risk Confidence Score:</label>
+                            <div class="progress risk-meter bg-dark">
+                                <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;"></div>
+                            </div>
+                            <span id="scoreText" class="fw-bold fs-5 mt-1 d-block"></span>
+                        </div>
+
+                        <h6 class="fw-bold mt-3">Detected Risk Triggers:</h6>
+                        <ul id="reasonList" class="text-warning"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function checkMessage() {
+            const message = document.getElementById("scamInput").value;
+            if(!message.trim()) {
+                alert("Please enter or paste a message first!");
+                return;
+            }
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await response.json();
+                
+                // Show result box
+                document.getElementById("resultBox").classList.remove("d-none");
+                document.getElementById("statusLabel").innerText = data.status;
+                
+                const bar = document.getElementById("progressBar");
+                bar.style.width = data.score + "%";
+                document.getElementById("scoreText").innerText = data.score + "% Risk";
+
+                if(data.color === 'danger') {
+                    bar.className = "progress-bar bg-danger";
+                    document.getElementById("statusLabel").className = "fw-bold text-danger";
+                } else if(data.color === 'warning') {
+                    bar.className = "progress-bar bg-warning";
+                    document.getElementById("statusLabel").className = "fw-bold text-warning";
+                } else {
+                    bar.className = "progress-bar bg-success";
+                    document.getElementById("statusLabel").className = "fw-bold text-success";
+                }
+
+                const reasonList = document.getElementById("reasonList");
+                reasonList.innerHTML = "";
+                data.reasons.forEach(r => {
+                    let li = document.createElement("li");
+                    li.innerText = r;
+                    reasonList.appendChild(li);
+                });
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Something went wrong! Make sure app.py is running.");
+            }
+        }
+    </script>
+</body>
+</html>
